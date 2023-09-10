@@ -11,9 +11,11 @@
 
 - logging updated to use slf4j
 - added withDebug() method to RedisConnectionProperty
-- added ping() method to check redis connectivity in RedisAuthTokenCache
+- added ping() method to check redis connectivity in RedisAuthTokenCache and throw exception if not connected
 - minor bug fixes
 
 ### v1.1.0
 
 - added support for spring boot autoconfiguration
+- added support for spring boot configuration properties
+- added shutdown hook to cleanup redis resources in RedisAuthTokenCache

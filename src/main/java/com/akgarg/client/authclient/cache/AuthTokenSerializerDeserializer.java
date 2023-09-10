@@ -1,4 +1,4 @@
-package com.akgarg.client.authclient.redis;
+package com.akgarg.client.authclient.cache;
 
 import com.akgarg.client.authclient.common.AuthToken;
 
@@ -8,7 +8,7 @@ import java.io.*;
  * @author Akhilesh Garg
  * @since 10/09/23
  */
-public final class AuthTokenSerializerDeserializer {
+final class AuthTokenSerializerDeserializer {
 
     private AuthTokenSerializerDeserializer() {
         throw new IllegalStateException();

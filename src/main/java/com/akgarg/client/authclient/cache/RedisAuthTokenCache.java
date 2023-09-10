@@ -1,9 +1,9 @@
 package com.akgarg.client.authclient.cache;
 
 import com.akgarg.client.authclient.common.AuthToken;
-import com.akgarg.client.authclient.redis.RedisConnectionPoolConfig;
-import com.akgarg.client.authclient.redis.RedisConnectionProperty;
-import com.akgarg.client.authclient.redis.RedisConnectivityException;
+import com.akgarg.client.authclient.config.RedisConnectionConfigs;
+import com.akgarg.client.authclient.config.RedisConnectionPoolConfigs;
+import com.akgarg.client.authclient.exception.RedisConnectivityException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
@@ -16,8 +16,8 @@ import java.time.Duration;
 import java.util.Objects;
 import java.util.Optional;
 
-import static com.akgarg.client.authclient.redis.AuthTokenSerializerDeserializer.deserialize;
-import static com.akgarg.client.authclient.redis.AuthTokenSerializerDeserializer.serializeToken;
+import static com.akgarg.client.authclient.cache.AuthTokenSerializerDeserializer.deserialize;
+import static com.akgarg.client.authclient.cache.AuthTokenSerializerDeserializer.serializeToken;
 
 public final class RedisAuthTokenCache implements AuthTokenCache {
 
@@ -26,24 +26,14 @@ public final class RedisAuthTokenCache implements AuthTokenCache {
     private final JedisPool connectionPool;
 
     public RedisAuthTokenCache(
-            final RedisConnectionProperty connectionProperty,
-            final RedisConnectionPoolConfig connectionPoolConfig
+            final RedisConnectionConfigs connectionProperty,
+            final RedisConnectionPoolConfigs connectionPoolConfig
     ) {
         Objects.requireNonNull(connectionProperty, "please provide valid redisConnectionProperty");
         this.connectionPool = initializeConnectionPool(connectionProperty, connectionPoolConfig);
         ping();
-        LOGGER.info("Redis auth token cache initialized");
-    }
-
-    private void ping() {
-        try (final Jedis jedis = connectionPool.getResource()) {
-            final String pingResponse = jedis.ping();
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Redis ping response: {}", pingResponse);
-            }
-        } catch (Exception e) {
-            throw new RedisConnectivityException("PING to redis failed", e);
-        }
+        registerCleanupShutdownHook();
+        LOGGER.trace("Redis auth token cache initialized");
     }
 
     @Override
@@ -109,24 +99,24 @@ public final class RedisAuthTokenCache implements AuthTokenCache {
     }
 
     private JedisPool initializeConnectionPool(
-            final RedisConnectionProperty connectionProperty,
-            final RedisConnectionPoolConfig redisConnectionPoolConfig
+            final RedisConnectionConfigs connectionProperty,
+            final RedisConnectionPoolConfigs redisConnectionPoolConfigs
     ) {
-        final JedisPoolConfig connectionPoolConfigs = getConnectionPoolConfigs(redisConnectionPoolConfig);
+        final JedisPoolConfig connectionPoolConfigs = getConnectionPoolConfigs(redisConnectionPoolConfigs);
         return new JedisPool(connectionPoolConfigs, connectionProperty.host(), connectionProperty.port());
     }
 
-    private JedisPoolConfig getConnectionPoolConfigs(final RedisConnectionPoolConfig redisConnectionPoolConfig) {
+    private JedisPoolConfig getConnectionPoolConfigs(final RedisConnectionPoolConfigs redisConnectionPoolConfigs) {
         final JedisPoolConfig poolConfig = new JedisPoolConfig();
 
-        if (redisConnectionPoolConfig != null) {
-            poolConfig.setMaxTotal(redisConnectionPoolConfig.maxTotal());
-            poolConfig.setMaxIdle(redisConnectionPoolConfig.maxIdle());
-            poolConfig.setMinIdle(redisConnectionPoolConfig.minIdle());
+        if (redisConnectionPoolConfigs != null) {
+            poolConfig.setMaxTotal(redisConnectionPoolConfigs.maxTotal());
+            poolConfig.setMaxIdle(redisConnectionPoolConfigs.maxIdle());
+            poolConfig.setMinIdle(redisConnectionPoolConfigs.minIdle());
         } else {
-            poolConfig.setMaxTotal(RedisConnectionPoolConfig.DEFAULT_MAX_TOTAL);
-            poolConfig.setMaxIdle(RedisConnectionPoolConfig.DEFAULT_MAX_IDLE);
-            poolConfig.setMinIdle(RedisConnectionPoolConfig.DEFAULT_MIN_IDLE);
+            poolConfig.setMaxTotal(RedisConnectionPoolConfigs.DEFAULT_MAX_TOTAL);
+            poolConfig.setMaxIdle(RedisConnectionPoolConfigs.DEFAULT_MAX_IDLE);
+            poolConfig.setMinIdle(RedisConnectionPoolConfigs.DEFAULT_MIN_IDLE);
         }
 
         poolConfig.setTestOnBorrow(true);
@@ -138,6 +128,35 @@ public final class RedisAuthTokenCache implements AuthTokenCache {
         poolConfig.setBlockWhenExhausted(true);
 
         return poolConfig;
+    }
+
+
+    private void ping() {
+        try (final Jedis jedis = connectionPool.getResource()) {
+            final String pingResponse = jedis.ping();
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Redis ping response: {}", pingResponse);
+            }
+        } catch (Exception e) {
+            throw new RedisConnectivityException("PING to redis failed", e);
+        }
+    }
+
+    /**
+     * Method to register shutdown hook to close redis connection pool
+     */
+    private void registerCleanupShutdownHook() {
+        LOGGER.debug("Registering shutdown hook for RedisAuthTokenCache");
+
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+            try {
+                LOGGER.info("Shutting down RedisAuthTokenCache...");
+                connectionPool.close();
+                LOGGER.info("Completed shut down of RedisAuthTokenCache");
+            } catch (Exception e) {
+                LOGGER.error("Error shutting down RedisAuthTokenCache: {}", e.getMessage());
+            }
+        }, "redisAuthTokenCacheShutdownHook"));
     }
 
 }

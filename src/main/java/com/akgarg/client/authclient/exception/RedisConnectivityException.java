@@ -1,4 +1,4 @@
-package com.akgarg.client.authclient.redis;
+package com.akgarg.client.authclient.exception;
 
 /**
  * @author Akhilesh Garg

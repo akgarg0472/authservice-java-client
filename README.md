@@ -12,7 +12,7 @@
 - [Usage](#usage)
 - [Changelogs](#changelogs)
 
-### Overview
+## Overview
 
 AuthClient provides a versatile solution for validating auth tokens with support for flexible caching implementation for
 performance optimization.<br>
@@ -23,14 +23,14 @@ making it fit for microservice environment.
 
 * [High Level Architecture](docs/authclient_arch_overview.md)
 
-### Key Features
+## Key Features
 
 - **Token Validation**: Validate authorization tokens with ease
 - **Caching**: Choose between in-memory or Redis-based caching for improved performance
 - **Automatic Cache Management**: Tokens are automatically cached and updated as needed
 - **Java 17+ Compatibility**: Utilizes the latest features of Java 17
 
-### Installation
+## Installation
 
 AuthClient library can be integrated into Java project using Maven. Add the following dependency to your `pom.xml`:
 
@@ -45,9 +45,9 @@ AuthClient library can be integrated into Java project using Maven. Add the foll
 
 Java Version 17 is the baseline java version required.
 
-### Configuration
+## Configuration
 
-#### Default Configuration
+### Default Configuration
 
 ```java
 package foo.bar;
@@ -72,9 +72,7 @@ Default configuration uses the in-memory cache by default. [Click here](#redis-c
 changing cache store to
 redis.
 
-#### Redis Cache Configuration
-
-Use following configuration to use AuthClient with Redis as cache store:
+### Redis Cache Configuration
 
 ```java
 package foo.bar;
@@ -82,23 +80,22 @@ package foo.bar;
 import com.akgarg.client.authclient.AuthClientBuilder;
 import com.akgarg.client.authclient.cache.AuthTokenCacheStrategy;
 import com.akgarg.client.authclient.AuthClient;
-import com.akgarg.client.authclient.redis.RedisConnectionPoolConfig;
-import com.akgarg.client.authclient.redis.RedisConnectionProperty;
-
-import java.time.Duration;
+import com.akgarg.client.authclient.config.RedisConnectionPoolConfigs;
+import com.akgarg.client.authclient.config.RedisConnectionPoolProperties;
+import com.akgarg.client.authclient.config.RedisConnectionConfigs;
 
 class AuthClientConfiguration {
 
     // Initialize AuthClient with redis as cache store
     void redisAuthClient() {
-        final RedisConnectionProperty connectionProperty = new RedisConnectionProperty("localhost", 6379);
-        final RedisConnectionPoolConfig connectionPoolConfig = RedisConnectionPoolConfig.withDefaults();
+        final RedisConnectionConfigs connectionProperty = new RedisConnectionConfigs("localhost", 6379);
+        final RedisConnectionPoolConfigs connectionPoolConfig = RedisConnectionPoolConfigs.withDefaults();
 
         final AuthClient authClient = AuthClientBuilder
                 .builder()
                 .cacheStrategy(AuthTokenCacheStrategy.REDIS)
-                .redisConnectionProperties(connectionProperty)
-                .redisConnectionPoolConfig(connectionPoolConfig)
+                .redisConnectionConfigs(connectionProperty)
+                .redisConnectionPoolConfigs(connectionPoolConfig)
                 .build();
 
         // ...
@@ -106,7 +103,31 @@ class AuthClientConfiguration {
 } 
 ```
 
-### Usage
+### Spring Configuration
+
+#### YAML
+
+```yaml
+auth:
+  client:
+    redis-host: localhost
+    redis-port: 6379
+    redis-connection-pool-max-total: 128
+    redis-connection-pool-max-idle: 128
+    redis-connection-pool-min-idle: 16
+```
+
+#### Properties
+
+```properties
+auth.client.redis-host=localhost
+auth.client.redis-port=6379
+auth.client.redis-connection-pool-max-total=128
+auth.client.redis-connection-pool-max-idle=128
+auth.client.redis-connection-pool-min-idle=16
+```
+
+## Usage
 
 ```java
 package foo.bar;
@@ -148,6 +169,6 @@ public class UsageExample() {
 }
 ```
 
-### Changelogs
+## Changelogs
 
 Refer [changelog docs](docs/changelogs.md) for detailed changelogs

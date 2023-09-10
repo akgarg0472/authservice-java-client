@@ -4,8 +4,8 @@ import com.akgarg.client.authclient.cache.AuthTokenCache;
 import com.akgarg.client.authclient.cache.AuthTokenCacheStrategy;
 import com.akgarg.client.authclient.cache.InMemoryAuthTokenCache;
 import com.akgarg.client.authclient.cache.RedisAuthTokenCache;
-import com.akgarg.client.authclient.redis.RedisConnectionPoolConfig;
-import com.akgarg.client.authclient.redis.RedisConnectionProperty;
+import com.akgarg.client.authclient.config.RedisConnectionConfigs;
+import com.akgarg.client.authclient.config.RedisConnectionPoolConfigs;
 import com.akgarg.client.authclient.http.AuthServiceHttpClient;
 import com.akgarg.client.authclient.http.DefaultAuthServiceHttpClient;
 
@@ -19,9 +19,9 @@ public final class AuthClientBuilder {
 
     private final AuthServiceHttpClient authServiceHttpClient;
     private AuthTokenCache authTokenCache;
-    private RedisConnectionProperty redisConnectionProperty;
+    private RedisConnectionConfigs redisConnectionConfigs;
     private AuthTokenCacheStrategy cacheStrategy;
-    private RedisConnectionPoolConfig connectionPoolConfig;
+    private RedisConnectionPoolConfigs connectionPoolConfig;
 
     private AuthClientBuilder() {
         this.authTokenCache = new InMemoryAuthTokenCache();
@@ -38,21 +38,21 @@ public final class AuthClientBuilder {
         return this;
     }
 
-    public AuthClientBuilder redisConnectionProperties(final RedisConnectionProperty redisConnectionProperty) {
-        Objects.requireNonNull(redisConnectionProperty, "redis connection config can't be null");
-        this.redisConnectionProperty = redisConnectionProperty;
+    public AuthClientBuilder redisConnectionProperties(final RedisConnectionConfigs redisConnectionConfigs) {
+        Objects.requireNonNull(redisConnectionConfigs, "redis connection config can't be null");
+        this.redisConnectionConfigs = redisConnectionConfigs;
         return this;
     }
 
-    public AuthClientBuilder redisConnectionPoolConfig(final RedisConnectionPoolConfig redisConnectionPoolConfig) {
-        Objects.requireNonNull(redisConnectionPoolConfig, "redis connection pool config is null");
-        this.connectionPoolConfig = redisConnectionPoolConfig;
+    public AuthClientBuilder redisConnectionPoolConfig(final RedisConnectionPoolConfigs redisConnectionPoolConfigs) {
+        Objects.requireNonNull(redisConnectionPoolConfigs, "redis connection pool config is null");
+        this.connectionPoolConfig = redisConnectionPoolConfigs;
         return this;
     }
 
     public AuthClient build() {
         if (AuthTokenCacheStrategy.REDIS.equals(this.cacheStrategy)) {
-            this.authTokenCache = new RedisAuthTokenCache(this.redisConnectionProperty, this.connectionPoolConfig);
+            this.authTokenCache = new RedisAuthTokenCache(this.redisConnectionConfigs, this.connectionPoolConfig);
         }
         return new DefaultAuthClient(this.authTokenCache, this.authServiceHttpClient);
     }
