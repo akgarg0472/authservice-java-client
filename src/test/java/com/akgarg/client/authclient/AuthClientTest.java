@@ -6,8 +6,6 @@ import com.akgarg.client.authclient.common.AuthServiceEndpoint;
 import com.akgarg.client.authclient.common.ValidateTokenRequest;
 import com.akgarg.client.authclient.http.AuthServiceHttpClient;
 import com.akgarg.client.authclient.http.DefaultAuthServiceHttpClient;
-import org.apache.logging.log4j.Level;
-import org.apache.logging.log4j.LogManager;
 import org.junit.jupiter.api.Test;
 
 import java.util.Collections;
@@ -25,8 +23,6 @@ class AuthClientTest {
 
     @Test
     void authClientValidateMethod_ShouldReturnFalse_WithInvalidRequestLogs() {
-        LogManager.getRootLogger().atLevel(Level.DEBUG);
-
         final AuthTokenCache authTokenCache = new InMemoryAuthTokenCache();
         final AuthServiceHttpClient authServiceHttpClient = new DefaultAuthServiceHttpClient();
 

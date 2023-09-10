@@ -14,4 +14,12 @@ public record ValidateTokenRequest(String userId, String token, List<AuthService
                 authServiceEndpoints != null && !authServiceEndpoints.isEmpty();
     }
 
+    @Override
+    public String toString() {
+        return "ValidateTokenRequest{" +
+                "userId='" + userId + '\'' +
+                ", authServiceEndpoints=" + authServiceEndpoints +
+                '}';
+    }
+
 }

@@ -45,7 +45,7 @@ public final class AuthClientBuilder {
     }
 
     public AuthClientBuilder redisConnectionPoolConfig(final RedisConnectionPoolConfig redisConnectionPoolConfig) {
-        Objects.requireNonNull(redisConnectionPoolConfig);
+        Objects.requireNonNull(redisConnectionPoolConfig, "redis connection pool config is null");
         this.connectionPoolConfig = redisConnectionPoolConfig;
         return this;
     }

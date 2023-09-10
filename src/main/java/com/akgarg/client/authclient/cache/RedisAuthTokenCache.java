@@ -3,15 +3,16 @@ package com.akgarg.client.authclient.cache;
 import com.akgarg.client.authclient.common.AuthToken;
 import com.akgarg.client.authclient.redis.RedisConnectionPoolConfig;
 import com.akgarg.client.authclient.redis.RedisConnectionProperty;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import redis.clients.jedis.*;
+import com.akgarg.client.authclient.redis.RedisConnectivityException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.Pipeline;
 
-import java.io.ByteArrayOutputStream;
-import java.io.ObjectOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -20,7 +21,7 @@ import static com.akgarg.client.authclient.redis.AuthTokenSerializerDeserializer
 
 public final class RedisAuthTokenCache implements AuthTokenCache {
 
-    private static final Logger LOGGER = LogManager.getLogger(RedisAuthTokenCache.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(RedisAuthTokenCache.class);
     private static final byte[] REDIS_HASH_FIELD = "auth_token".getBytes(StandardCharsets.UTF_8);
     private final JedisPool connectionPool;
 
@@ -28,13 +29,28 @@ public final class RedisAuthTokenCache implements AuthTokenCache {
             final RedisConnectionProperty connectionProperty,
             final RedisConnectionPoolConfig connectionPoolConfig
     ) {
-        Objects.requireNonNull(connectionProperty);
+        Objects.requireNonNull(connectionProperty, "please provide valid redisConnectionProperty");
         this.connectionPool = initializeConnectionPool(connectionProperty, connectionPoolConfig);
+        ping();
+        LOGGER.info("Redis auth token cache initialized");
+    }
+
+    private void ping() {
+        try (final Jedis jedis = connectionPool.getResource()) {
+            final String pingResponse = jedis.ping();
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Redis ping response: {}", pingResponse);
+            }
+        } catch (Exception e) {
+            throw new RedisConnectivityException("PING to redis failed", e);
+        }
     }
 
     @Override
     public Optional<AuthToken> getToken(final String userId) {
-        LOGGER.trace("'{}' fetching token in cache", userId);
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("Fetching token in cache: '{}'", userId);
+        }
 
         try (final Jedis jedis = connectionPool.getResource()) {
             final byte[] authToken = jedis.hget(userId.getBytes(StandardCharsets.UTF_8), REDIS_HASH_FIELD);
@@ -45,21 +61,26 @@ public final class RedisAuthTokenCache implements AuthTokenCache {
 
             return Optional.of(deserialize(authToken));
         } catch (Exception e) {
-            LOGGER.error("error getting token for {}: {}", userId, e.getMessage());
+            LOGGER.error("Error getting token for {}: {}", userId, e.getMessage());
             return Optional.empty();
         }
     }
 
     @Override
     public boolean addToken(final String userId, final AuthToken token) {
-        LOGGER.trace("'{}' adding token in cache", userId);
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("'{}' adding token in cache", userId);
+        }
 
         try (final Jedis jedis = connectionPool.getResource()) {
             final byte[] key = userId.getBytes(StandardCharsets.UTF_8);
             final byte[] tokenBytes = serializeToken(token);
 
             final long expiration = (token.expiration() - System.currentTimeMillis()) / 1000;
-            LOGGER.trace("'{}' expiration time in seconds is: {}", userId, expiration);
+
+            if (LOGGER.isTraceEnabled()) {
+                LOGGER.trace("'{}' expiration time in seconds is: {}", userId, expiration);
+            }
 
             final Pipeline pipeline = jedis.pipelined();
             pipeline.hset(key, REDIS_HASH_FIELD, tokenBytes);
@@ -75,7 +96,9 @@ public final class RedisAuthTokenCache implements AuthTokenCache {
 
     @Override
     public boolean removeToken(final String userId) {
-        LOGGER.trace("'{}' removing token in cache", userId);
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("'{}' removing token in cache", userId);
+        }
 
         try (final Jedis jedis = connectionPool.getResource()) {
             return jedis.hdel(userId.getBytes(StandardCharsets.UTF_8), REDIS_HASH_FIELD) == 1;

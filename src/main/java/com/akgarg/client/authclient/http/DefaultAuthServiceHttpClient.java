@@ -6,8 +6,8 @@ import com.akgarg.client.authclient.common.AuthServiceResponse;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 import java.net.http.HttpClient;
@@ -24,7 +24,7 @@ import java.util.Optional;
  */
 public final class DefaultAuthServiceHttpClient implements AuthServiceHttpClient {
 
-    private static final Logger LOGGER = LogManager.getLogger(DefaultAuthServiceHttpClient.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultAuthServiceHttpClient.class);
 
     private static final String VALIDATE_TOKEN_ENDPOINT = "auth/validate-token";
 
@@ -47,13 +47,15 @@ public final class DefaultAuthServiceHttpClient implements AuthServiceHttpClient
             final AuthServiceRequest request
     ) {
         try {
-            final var httpRequest = createHttpRequest(endpoint, request);
-            final var response = httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString()).get();
+            final HttpRequest httpRequest = createHttpRequest(endpoint, request);
+            final HttpResponse<String> response = httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString()).get();
+
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Auth service response code: {}", response.statusCode());
+                LOGGER.debug("Auth service response: {}", response.body());
+            }
 
             if (response.statusCode() != 200) {
-                if (LOGGER.isErrorEnabled()) {
-                    LOGGER.error("token validation failed: {}", response.body());
-                }
                 return Optional.of(new AuthServiceResponse(request.userId(), request.token(), -1, false));
             }
 
@@ -68,7 +70,7 @@ public final class DefaultAuthServiceHttpClient implements AuthServiceHttpClient
             final AuthServiceEndpoint endpoint,
             final AuthServiceRequest request
     ) throws JsonProcessingException {
-        final var requestBody = createRequestBody(request);
+        final String requestBody = createRequestBody(request);
 
         return HttpRequest
                 .newBuilder()
@@ -79,7 +81,7 @@ public final class DefaultAuthServiceHttpClient implements AuthServiceHttpClient
     }
 
     private URI getAuthServiceEndpointURI(final AuthServiceEndpoint authServiceEndpoint) {
-        final var _endpoint = authServiceEndpoint.scheme() + "://" + authServiceEndpoint.host() + ":" + authServiceEndpoint.port() + "/" + VALIDATE_TOKEN_ENDPOINT;
+        final String _endpoint = authServiceEndpoint.scheme() + "://" + authServiceEndpoint.host() + ":" + authServiceEndpoint.port() + "/" + VALIDATE_TOKEN_ENDPOINT;
 
         return URI.create(_endpoint);
     }

@@ -3,17 +3,14 @@ package com.akgarg.client.authclient;
 import com.akgarg.client.authclient.cache.AuthTokenCache;
 import com.akgarg.client.authclient.common.*;
 import com.akgarg.client.authclient.http.AuthServiceHttpClient;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Random;
+import java.util.*;
 
 final class DefaultAuthClient implements AuthClient {
 
-    private static final Logger LOGGER = LogManager.getLogger(DefaultAuthClient.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DefaultAuthClient.class);
     private final Random random;
 
     private final AuthTokenCache authTokenCache;
@@ -30,16 +27,20 @@ final class DefaultAuthClient implements AuthClient {
 
     @Override
     public boolean validate(final ValidateTokenRequest request) {
-        LOGGER.debug("validating request: {}", request);
+        if (LOGGER.isTraceEnabled()) {
+            LOGGER.trace("validating request: {}", request);
+        }
 
         if (!request.validate()) {
             LOGGER.error("invalid validate request: {}", request);
             return false;
         }
 
-        final var authToken = authTokenCache.getToken(request.token());
+        final Optional<AuthToken> authToken = authTokenCache.getToken(request.userId());
 
-        LOGGER.debug("[{}] auth token from cache: {}", request.token(), authToken);
+        if (LOGGER.isDebugEnabled()) {
+            LOGGER.debug("Auth token fetched from cache for {}: {}", request.userId(), authToken);
+        }
 
         if (authToken.isPresent()) {
             if (!authToken.get().userId().equals(request.userId())) {
@@ -59,26 +60,28 @@ final class DefaultAuthClient implements AuthClient {
      * @return true if token is validated successfully or false otherwise
      */
     private boolean queryToAuthServiceAndReturnResponse(final ValidateTokenRequest request) {
-        final var authServiceEndpoints = new ArrayList<>(request.authServiceEndpoints());
-
-        final var authServiceRequest = new AuthServiceRequest(request.userId(), request.token());
+        final List<AuthServiceEndpoint> authServiceEndpoints = new ArrayList<>(request.authServiceEndpoints());
+        final AuthServiceRequest authServiceRequest = new AuthServiceRequest(request.userId(), request.token());
         Boolean result = null;
 
         while (result == null && !authServiceEndpoints.isEmpty()) {
-            final var authServiceEndpoint = getRandomAuthServiceEndpoint(authServiceEndpoints);
-            final var authServiceResponse = authServiceHttpClient.queryAuthService(authServiceEndpoint, authServiceRequest);
+            final AuthServiceEndpoint authServiceEndpoint = getRandomAuthServiceEndpoint(authServiceEndpoints);
+            final Optional<AuthServiceResponse> authServiceResponse = authServiceHttpClient.queryAuthService(authServiceEndpoint, authServiceRequest);
 
             if (authServiceResponse.isEmpty()) {
-                if (LOGGER.isTraceEnabled()) {
-                    LOGGER.trace("removing authServiceEndpoint: {}", authServiceEndpoint);
-                }
                 authServiceEndpoints.remove(authServiceEndpoint);
                 continue;
             }
 
-            LOGGER.debug("auth service response for '{}': {}", request.userId(), authServiceResponse.get());
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Auth service query response for '{}' is {}", request, authServiceResponse.get());
+            }
+
             result = processAuthServiceResponse(request.userId(), authServiceResponse.get());
-            LOGGER.debug("auth service query result for '{}' is {}", request.userId(), result);
+
+            if (LOGGER.isDebugEnabled()) {
+                LOGGER.debug("Auth service query result for '{}' is {}", request, result);
+            }
         }
 
         return Objects.requireNonNullElse(result, false);
@@ -94,10 +97,7 @@ final class DefaultAuthClient implements AuthClient {
      */
     private Boolean processAuthServiceResponse(final String userId, final AuthServiceResponse response) {
         if (response.success() && response.userId().equals(userId)) {
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("token validation success: {}", response);
-            }
-            final var authToken = new AuthToken(userId, response.token(), response.expiration());
+            final AuthToken authToken = new AuthToken(userId, response.token(), response.expiration());
             authTokenCache.addToken(response.userId(), authToken);
             return Boolean.TRUE;
         }
