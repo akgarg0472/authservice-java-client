@@ -61,7 +61,7 @@ public final class DefaultAuthServiceHttpClient implements AuthServiceHttpClient
 
             return Optional.ofNullable(objectMapper.readValue(response.body(), AuthServiceResponse.class));
         } catch (Exception e) {
-            LOGGER.error("error querying auth service: {}", e.getMessage());
+            LOGGER.error("{} querying auth service: {}", e.getClass().getName(), e.getMessage());
             return Optional.empty();
         }
     }

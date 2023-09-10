@@ -13,3 +13,7 @@
 - added withDebug() method to RedisConnectionProperty
 - added ping() method to check redis connectivity in RedisAuthTokenCache
 - minor bug fixes
+
+### v1.1.0
+
+- added support for spring boot autoconfiguration

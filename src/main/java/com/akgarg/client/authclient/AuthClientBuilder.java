@@ -51,7 +51,7 @@ public final class AuthClientBuilder {
     }
 
     public AuthClient build() {
-        if (this.cacheStrategy.equals(AuthTokenCacheStrategy.REDIS)) {
+        if (AuthTokenCacheStrategy.REDIS.equals(this.cacheStrategy)) {
             this.authTokenCache = new RedisAuthTokenCache(this.redisConnectionProperty, this.connectionPoolConfig);
         }
         return new DefaultAuthClient(this.authTokenCache, this.authServiceHttpClient);
