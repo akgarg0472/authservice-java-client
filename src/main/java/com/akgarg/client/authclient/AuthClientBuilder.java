@@ -6,7 +6,6 @@ import com.akgarg.client.authclient.cache.InMemoryAuthTokenCache;
 import com.akgarg.client.authclient.cache.RedisAuthTokenCache;
 import com.akgarg.client.authclient.config.RedisConnectionConfigs;
 import com.akgarg.client.authclient.config.RedisConnectionPoolConfigs;
-import com.akgarg.client.authclient.http.AuthServiceHttpClient;
 import com.akgarg.client.authclient.http.DefaultAuthServiceHttpClient;
 
 import java.util.Objects;
@@ -17,15 +16,12 @@ import java.util.Objects;
  */
 public final class AuthClientBuilder {
 
-    private final AuthServiceHttpClient authServiceHttpClient;
-    private AuthTokenCache authTokenCache;
     private RedisConnectionConfigs redisConnectionConfigs;
     private AuthTokenCacheStrategy cacheStrategy;
     private RedisConnectionPoolConfigs connectionPoolConfig;
+    private String validateTokenEndpoint;
 
     private AuthClientBuilder() {
-        this.authTokenCache = new InMemoryAuthTokenCache();
-        this.authServiceHttpClient = new DefaultAuthServiceHttpClient();
     }
 
     public static AuthClientBuilder builder() {
@@ -50,11 +46,24 @@ public final class AuthClientBuilder {
         return this;
     }
 
-    public AuthClient build() {
+    public AuthClientBuilder tokenValidationEndpoint(final String validateTokenEndpoint) {
+        Objects.requireNonNull(validateTokenEndpoint, "validate token endpoint is null");
+        this.validateTokenEndpoint = validateTokenEndpoint;
+        return this;
+    }
+
+    private AuthTokenCache buildAuthTokenCache() {
         if (AuthTokenCacheStrategy.REDIS.equals(this.cacheStrategy)) {
-            this.authTokenCache = new RedisAuthTokenCache(this.redisConnectionConfigs, this.connectionPoolConfig);
+            return new RedisAuthTokenCache(this.redisConnectionConfigs, this.connectionPoolConfig);
+        } else {
+            return new InMemoryAuthTokenCache();
         }
-        return new DefaultAuthClient(this.authTokenCache, this.authServiceHttpClient);
+    }
+
+    public AuthClient build() {
+        final var authServiceHttpClient = new DefaultAuthServiceHttpClient(this.validateTokenEndpoint);
+        final AuthTokenCache authTokenCache = buildAuthTokenCache();
+        return new DefaultAuthClient(authTokenCache, authServiceHttpClient);
     }
 
 }

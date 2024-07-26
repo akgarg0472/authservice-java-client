@@ -26,7 +26,8 @@ class AuthServiceHttpClientTest {
                 getAuthToken()
         );
 
-        final AuthServiceHttpClient httpClient = new DefaultAuthServiceHttpClient();
+        final var validateTokenEndpoint = "auth/v1/validate-token";
+        final AuthServiceHttpClient httpClient = new DefaultAuthServiceHttpClient(validateTokenEndpoint);
         final AuthServiceEndpoint authServiceEndpoint = new AuthServiceEndpoint(
                 "http",
                 "localhost",
@@ -52,7 +53,8 @@ class AuthServiceHttpClientTest {
                 getValidAuthToken()
         );
 
-        final AuthServiceHttpClient httpClient = new DefaultAuthServiceHttpClient();
+        final var validateTokenEndpoint = "auth/v1/validate-token";
+        final AuthServiceHttpClient httpClient = new DefaultAuthServiceHttpClient(validateTokenEndpoint);
         final AuthServiceEndpoint authServiceEndpoint = new AuthServiceEndpoint(
                 "http",
                 "localhost",
@@ -90,7 +92,8 @@ class AuthServiceHttpClientTest {
                 getAuthToken()
         );
 
-        final AuthServiceHttpClient httpClient = new DefaultAuthServiceHttpClient();
+        final var validateTokenEndpoint = "auth/v1/validate-token";
+        final AuthServiceHttpClient httpClient = new DefaultAuthServiceHttpClient(validateTokenEndpoint);
         final AuthServiceEndpoint authServiceEndpoint = new AuthServiceEndpoint(
                 "http",
                 "localhost",

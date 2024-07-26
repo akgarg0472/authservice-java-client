@@ -26,14 +26,20 @@ public final class DefaultAuthServiceHttpClient implements AuthServiceHttpClient
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DefaultAuthServiceHttpClient.class);
 
-    private static final String VALIDATE_TOKEN_ENDPOINT = "auth/validate-token";
+    private static final String VALIDATE_TOKEN_ENDPOINT = "auth/v1/validate-token";
 
     private final HttpClient httpClient;
     private final ObjectMapper objectMapper;
+    private final String validateTokenEndpoint;
 
-    public DefaultAuthServiceHttpClient() {
-        objectMapper = createObjectMapperInstance();
-        httpClient = HttpClient.newHttpClient();
+    public DefaultAuthServiceHttpClient(final String validateTokenEndpoint) {
+        this.objectMapper = createObjectMapperInstance();
+        this.httpClient = HttpClient.newHttpClient();
+        this.validateTokenEndpoint = getValidateTokenEndpoint(validateTokenEndpoint);
+    }
+
+    private String getValidateTokenEndpoint(final String validateTokenEndpoint) {
+        return validateTokenEndpoint == null || validateTokenEndpoint.isBlank() ? VALIDATE_TOKEN_ENDPOINT : validateTokenEndpoint;
     }
 
     private ObjectMapper createObjectMapperInstance() {
@@ -61,7 +67,7 @@ public final class DefaultAuthServiceHttpClient implements AuthServiceHttpClient
 
             return Optional.ofNullable(objectMapper.readValue(response.body(), AuthServiceResponse.class));
         } catch (Exception e) {
-            LOGGER.error("{} querying auth service: {}", e.getClass().getName(), e.getMessage());
+            LOGGER.error("Error '{}' querying auth service to endpoint: {}", e.getMessage(), endpoint);
             return Optional.empty();
         }
     }
@@ -81,9 +87,9 @@ public final class DefaultAuthServiceHttpClient implements AuthServiceHttpClient
     }
 
     private URI getAuthServiceEndpointURI(final AuthServiceEndpoint authServiceEndpoint) {
-        final String _endpoint = authServiceEndpoint.scheme() + "://" + authServiceEndpoint.host() + ":" + authServiceEndpoint.port() + "/" + VALIDATE_TOKEN_ENDPOINT;
-
-        return URI.create(_endpoint);
+        return URI.create(
+                authServiceEndpoint.scheme() + "://" + authServiceEndpoint.host() + ":" + authServiceEndpoint.port() + "/" + this.validateTokenEndpoint
+        );
     }
 
     private String createRequestBody(final AuthServiceRequest request) throws JsonProcessingException {

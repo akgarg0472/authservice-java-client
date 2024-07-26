@@ -24,7 +24,8 @@ class AuthClientTest {
     @Test
     void authClientValidateMethod_ShouldReturnFalse_WithInvalidRequestLogs() {
         final AuthTokenCache authTokenCache = new InMemoryAuthTokenCache();
-        final AuthServiceHttpClient authServiceHttpClient = new DefaultAuthServiceHttpClient();
+        final var validateTokenEndpoint = "auth/v1/validate-token";
+        final AuthServiceHttpClient authServiceHttpClient = new DefaultAuthServiceHttpClient(validateTokenEndpoint);
 
         assertNotNull(authTokenCache, "authTokenCache is null");
         assertNotNull(authServiceHttpClient, "authServiceHttpClient is null");
@@ -48,27 +49,13 @@ class AuthClientTest {
     @Test
     void authClientValidateMethod_ShouldReturnFalse_WithConnectionExceptionErrorLogs() {
         final AuthTokenCache authTokenCache = new InMemoryAuthTokenCache();
-        final AuthServiceHttpClient authServiceHttpClient = new DefaultAuthServiceHttpClient();
+        final var validateTokenEndpoint = "auth/v1/validate-token";
+        final AuthServiceHttpClient authServiceHttpClient = new DefaultAuthServiceHttpClient(validateTokenEndpoint);
 
         assertNotNull(authTokenCache, "authTokenCache is null");
         assertNotNull(authServiceHttpClient, "authServiceHttpClient is null");
 
-        final AuthClient authClient = new DefaultAuthClient(
-                authTokenCache,
-                authServiceHttpClient
-        );
-
-        final ValidateTokenRequest validateTokenRequest = new ValidateTokenRequest(
-                "36f7cfae7e964cc0aa0cf17d006c3e97",
-                getAuthToken(),
-                List.of(
-                        new AuthServiceEndpoint("http", "localhost", 1234),
-                        new AuthServiceEndpoint("http", "localhost", 5678),
-                        new AuthServiceEndpoint("http", "localhost", 9012)
-                )
-        );
-
-        final boolean validateResponse = authClient.validate(validateTokenRequest);
+        final boolean validateResponse = isValidateResponse(authTokenCache, authServiceHttpClient);
 
         assertFalse(validateResponse);
     }
@@ -76,7 +63,8 @@ class AuthClientTest {
     @Test
     void authClientValidateMethod_ShouldReturnFalse_WithFewConnectionExceptionErrorLogs() {
         final AuthTokenCache authTokenCache = new InMemoryAuthTokenCache();
-        final AuthServiceHttpClient authServiceHttpClient = new DefaultAuthServiceHttpClient();
+        final var validateTokenEndpoint = "auth/v1/validate-token";
+        final AuthServiceHttpClient authServiceHttpClient = new DefaultAuthServiceHttpClient(validateTokenEndpoint);
 
         assertNotNull(authTokenCache, "authTokenCache is null");
         assertNotNull(authServiceHttpClient, "authServiceHttpClient is null");
@@ -104,26 +92,37 @@ class AuthClientTest {
     @Test
     void authClientValidateMethod_ShouldReturnTrue_WithFewConnectionExceptionErrorLogs() {
         final AuthTokenCache authTokenCache = new InMemoryAuthTokenCache();
-        final AuthServiceHttpClient authServiceHttpClient = new DefaultAuthServiceHttpClient();
+        final var validateTokenEndpoint = "auth/v1/validate-token";
+        final AuthServiceHttpClient authServiceHttpClient = new DefaultAuthServiceHttpClient(validateTokenEndpoint);
 
         assertNotNull(authTokenCache, "authTokenCache is null");
         assertNotNull(authServiceHttpClient, "authServiceHttpClient is null");
 
-        final AuthClient authClient = new DefaultAuthClient(authTokenCache, authServiceHttpClient);
+        final boolean validateResponse = isValidateResponse(authTokenCache, authServiceHttpClient);
+
+        assertTrue(validateResponse);
+    }
+
+    private boolean isValidateResponse(
+            final AuthTokenCache authTokenCache,
+            final AuthServiceHttpClient authServiceHttpClient
+    ) {
+        final AuthClient authClient = new DefaultAuthClient(
+                authTokenCache,
+                authServiceHttpClient
+        );
 
         final ValidateTokenRequest validateTokenRequest = new ValidateTokenRequest(
                 "36f7cfae7e964cc0aa0cf17d006c3e97",
                 getAuthToken(),
                 List.of(
-                        new AuthServiceEndpoint("http", "localhost", 8081),
-                        new AuthServiceEndpoint("http", "localhost", 8082),
-                        new AuthServiceEndpoint("http", "localhost", 8085)
+                        new AuthServiceEndpoint("http", "localhost", 1234),
+                        new AuthServiceEndpoint("http", "localhost", 5678),
+                        new AuthServiceEndpoint("http", "localhost", 9012)
                 )
         );
 
-        final boolean validateResponse = authClient.validate(validateTokenRequest);
-
-        assertTrue(validateResponse);
+        return authClient.validate(validateTokenRequest);
     }
 
     private String getAuthToken() {
