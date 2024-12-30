@@ -22,7 +22,7 @@ public final class InMemoryAuthTokenCache implements AuthTokenCache {
     @Override
     public Optional<AuthToken> getToken(final String userId) {
         Objects.requireNonNull(userId, "userId can't be null");
-        final AuthToken authToken = cacheMap.get(userId);
+        final var authToken = cacheMap.get(userId);
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Auth token fetched for '{}' is {}", userId, authToken);

@@ -36,7 +36,7 @@ final class DefaultAuthClient implements AuthClient {
             return false;
         }
 
-        final Optional<AuthToken> authToken = authTokenCache.getToken(request.userId());
+        final var authToken = authTokenCache.getToken(request.userId());
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("Auth token fetched from cache for {}: {}", request.userId(), authToken);
@@ -60,13 +60,13 @@ final class DefaultAuthClient implements AuthClient {
      * @return true if token is validated successfully or false otherwise
      */
     private boolean queryToAuthServiceAndReturnResponse(final ValidateTokenRequest request) {
-        final List<AuthServiceEndpoint> authServiceEndpoints = new ArrayList<>(request.authServiceEndpoints());
-        final AuthServiceRequest authServiceRequest = new AuthServiceRequest(request.userId(), request.token());
+        final var authServiceEndpoints = new ArrayList<>(request.authServiceEndpoints());
+        final var authServiceRequest = new AuthServiceRequest(request.userId(), request.token());
         Boolean result = null;
 
         while (result == null && !authServiceEndpoints.isEmpty()) {
-            final AuthServiceEndpoint authServiceEndpoint = getRandomAuthServiceEndpoint(authServiceEndpoints);
-            final Optional<AuthServiceResponse> authServiceResponse = authServiceHttpClient.queryAuthService(authServiceEndpoint, authServiceRequest);
+            final var authServiceEndpoint = getRandomAuthServiceEndpoint(authServiceEndpoints);
+            final var authServiceResponse = authServiceHttpClient.queryAuthService(authServiceEndpoint, authServiceRequest);
 
             if (authServiceResponse.isEmpty()) {
                 authServiceEndpoints.remove(authServiceEndpoint);
@@ -97,7 +97,7 @@ final class DefaultAuthClient implements AuthClient {
      */
     private Boolean processAuthServiceResponse(final String userId, final AuthServiceResponse response) {
         if (response.success() && response.userId().equals(userId)) {
-            final AuthToken authToken = new AuthToken(userId, response.token(), response.expiration());
+            final var authToken = new AuthToken(userId, response.token(), response.expiration());
             authTokenCache.addToken(response.userId(), authToken);
             return Boolean.TRUE;
         }

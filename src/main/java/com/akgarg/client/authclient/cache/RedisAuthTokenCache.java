@@ -43,7 +43,7 @@ public final class RedisAuthTokenCache implements AuthTokenCache {
         }
 
         try (final Jedis jedis = connectionPool.getResource()) {
-            final byte[] authToken = jedis.hget(userId.getBytes(StandardCharsets.UTF_8), REDIS_HASH_FIELD);
+            final var authToken = jedis.hget(userId.getBytes(StandardCharsets.UTF_8), REDIS_HASH_FIELD);
 
             if (authToken == null) {
                 return Optional.empty();
@@ -63,16 +63,15 @@ public final class RedisAuthTokenCache implements AuthTokenCache {
         }
 
         try (final Jedis jedis = connectionPool.getResource()) {
-            final byte[] key = userId.getBytes(StandardCharsets.UTF_8);
-            final byte[] tokenBytes = serializeToken(token);
-
-            final long expiration = (token.expiration() - System.currentTimeMillis()) / 1000;
+            final var key = userId.getBytes(StandardCharsets.UTF_8);
+            final var tokenBytes = serializeToken(token);
+            final var expiration = (token.expiration() - System.currentTimeMillis()) / 1000;
 
             if (LOGGER.isTraceEnabled()) {
                 LOGGER.trace("'{}' expiration time in seconds is: {}", userId, expiration);
             }
 
-            final Pipeline pipeline = jedis.pipelined();
+            final var pipeline = jedis.pipelined();
             pipeline.hset(key, REDIS_HASH_FIELD, tokenBytes);
             pipeline.expire(key, expiration);
             pipeline.sync();
@@ -90,7 +89,7 @@ public final class RedisAuthTokenCache implements AuthTokenCache {
             LOGGER.trace("'{}' removing token in cache", userId);
         }
 
-        try (final Jedis jedis = connectionPool.getResource()) {
+        try (final var jedis = connectionPool.getResource()) {
             return jedis.hdel(userId.getBytes(StandardCharsets.UTF_8), REDIS_HASH_FIELD) == 1;
         } catch (Exception e) {
             LOGGER.error("'{}' error deleting token: {}", userId, e.getMessage());
@@ -102,12 +101,12 @@ public final class RedisAuthTokenCache implements AuthTokenCache {
             final RedisConnectionConfigs connectionProperty,
             final RedisConnectionPoolConfigs redisConnectionPoolConfigs
     ) {
-        final JedisPoolConfig connectionPoolConfigs = getConnectionPoolConfigs(redisConnectionPoolConfigs);
+        final var connectionPoolConfigs = getConnectionPoolConfigs(redisConnectionPoolConfigs);
         return new JedisPool(connectionPoolConfigs, connectionProperty.host(), connectionProperty.port());
     }
 
     private JedisPoolConfig getConnectionPoolConfigs(final RedisConnectionPoolConfigs redisConnectionPoolConfigs) {
-        final JedisPoolConfig poolConfig = new JedisPoolConfig();
+        final var poolConfig = new JedisPoolConfig();
 
         if (redisConnectionPoolConfigs != null) {
             poolConfig.setMaxTotal(redisConnectionPoolConfigs.maxTotal());
@@ -122,7 +121,6 @@ public final class RedisAuthTokenCache implements AuthTokenCache {
         poolConfig.setTestOnBorrow(true);
         poolConfig.setTestOnReturn(true);
         poolConfig.setTestWhileIdle(true);
-        poolConfig.setMinEvictableIdleTime(Duration.ofSeconds(60));
         poolConfig.setTimeBetweenEvictionRuns(Duration.ofSeconds(30));
         poolConfig.setNumTestsPerEvictionRun(3);
         poolConfig.setBlockWhenExhausted(true);
@@ -132,8 +130,8 @@ public final class RedisAuthTokenCache implements AuthTokenCache {
 
 
     private void ping() {
-        try (final Jedis jedis = connectionPool.getResource()) {
-            final String pingResponse = jedis.ping();
+        try (final var jedis = connectionPool.getResource()) {
+            final var pingResponse = jedis.ping();
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Redis ping response: {}", pingResponse);
             }

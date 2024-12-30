@@ -53,8 +53,8 @@ public final class DefaultAuthServiceHttpClient implements AuthServiceHttpClient
             final AuthServiceRequest request
     ) {
         try {
-            final HttpRequest httpRequest = createHttpRequest(endpoint, request);
-            final HttpResponse<String> response = httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString()).get();
+            final var httpRequest = createHttpRequest(endpoint, request);
+            final var response = httpClient.sendAsync(httpRequest, HttpResponse.BodyHandlers.ofString()).get();
 
             if (LOGGER.isDebugEnabled()) {
                 LOGGER.debug("Auth service response code: {}", response.statusCode());
@@ -76,7 +76,7 @@ public final class DefaultAuthServiceHttpClient implements AuthServiceHttpClient
             final AuthServiceEndpoint endpoint,
             final AuthServiceRequest request
     ) throws JsonProcessingException {
-        final String requestBody = createRequestBody(request);
+        final var requestBody = createRequestBody(request);
 
         return HttpRequest
                 .newBuilder()

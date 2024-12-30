@@ -62,7 +62,7 @@ public final class AuthClientBuilder {
 
     public AuthClient build() {
         final var authServiceHttpClient = new DefaultAuthServiceHttpClient(this.validateTokenEndpoint);
-        final AuthTokenCache authTokenCache = buildAuthTokenCache();
+        final var authTokenCache = buildAuthTokenCache();
         return new DefaultAuthClient(authTokenCache, authServiceHttpClient);
     }
 
