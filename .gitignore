@@ -11,4 +11,5 @@ target/
 *.iml
 *.ipr
 *.cmd
+private-key.asc
 mvnw

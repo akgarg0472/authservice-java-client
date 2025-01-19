@@ -1,14 +1,15 @@
 package com.akgarg.client.authclient;
 
-import com.akgarg.client.authclient.cache.AuthTokenCache;
 import com.akgarg.client.authclient.cache.RedisAuthTokenCache;
 import com.akgarg.client.authclient.common.AuthToken;
 import com.akgarg.client.authclient.config.RedisConnectionConfigs;
 import com.akgarg.client.authclient.config.RedisConnectionPoolConfigs;
-import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.MethodOrderer;
+import org.junit.jupiter.api.Order;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestMethodOrder;
 
 import java.time.Duration;
-import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -24,16 +25,16 @@ class RedisAuthTokenCacheTest {
     @Test
     @Order(1)
     void addToken_ForSuccessfulInsertion() {
-        final RedisConnectionConfigs connectionProperty = new RedisConnectionConfigs("localhost", 6379);
-        final RedisConnectionPoolConfigs connectionPoolConfig = RedisConnectionPoolConfigs.withDefaults();
-        final AuthTokenCache tokenCache = new RedisAuthTokenCache(connectionProperty, connectionPoolConfig);
+        final var connectionProperty = new RedisConnectionConfigs("localhost", 6379);
+        final var connectionPoolConfig = RedisConnectionPoolConfigs.withDefaults();
+        final var tokenCache = new RedisAuthTokenCache(connectionProperty, connectionPoolConfig);
 
-        final String userId = "random-user-id";
-        final String token = UUID.randomUUID().toString();
+        final var userId = "random-user-id";
+        final var token = UUID.randomUUID().toString();
 
-        final long expiration = System.currentTimeMillis() + Duration.ofSeconds(10).toMillis();
-        final AuthToken authToken = new AuthToken(userId, token, expiration);
-        final boolean addResult = tokenCache.addToken(userId, authToken);
+        final var expiration = System.currentTimeMillis() + Duration.ofSeconds(10).toMillis();
+        final var authToken = new AuthToken(userId, token, expiration);
+        final var addResult = tokenCache.addToken(userId, authToken);
 
         assertTrue(addResult);
     }
@@ -41,12 +42,12 @@ class RedisAuthTokenCacheTest {
     @Test
     @Order(2)
     void getToken_ForSuccessfulFetch() {
-        final RedisConnectionConfigs connectionProperty = new RedisConnectionConfigs("localhost", 6379);
-        final RedisConnectionPoolConfigs connectionPoolConfig = RedisConnectionPoolConfigs.withDefaults();
-        final AuthTokenCache tokenCache = new RedisAuthTokenCache(connectionProperty, connectionPoolConfig);
+        final var connectionProperty = new RedisConnectionConfigs("localhost", 6379);
+        final var connectionPoolConfig = RedisConnectionPoolConfigs.withDefaults();
+        final var tokenCache = new RedisAuthTokenCache(connectionProperty, connectionPoolConfig);
 
-        final String userId = "random-user-id";
-        final Optional<AuthToken> authTokenOptional = tokenCache.getToken(userId);
+        final var userId = "random-user-id";
+        final var authTokenOptional = tokenCache.getToken(userId);
 
         assertTrue(authTokenOptional.isPresent());
     }
@@ -54,12 +55,12 @@ class RedisAuthTokenCacheTest {
     @Test
     @Order(3)
     void removeToken_Success() {
-        final RedisConnectionConfigs connectionProperty = new RedisConnectionConfigs("localhost", 6379);
-        final RedisConnectionPoolConfigs connectionPoolConfig = RedisConnectionPoolConfigs.withDefaults();
-        final AuthTokenCache tokenCache = new RedisAuthTokenCache(connectionProperty, connectionPoolConfig);
+        final var connectionProperty = new RedisConnectionConfigs("localhost", 6379);
+        final var connectionPoolConfig = RedisConnectionPoolConfigs.withDefaults();
+        final var tokenCache = new RedisAuthTokenCache(connectionProperty, connectionPoolConfig);
 
-        final String userId = "random-user-id";
-        final boolean removeTokenResponse = tokenCache.removeToken(userId);
+        final var userId = "random-user-id";
+        final var removeTokenResponse = tokenCache.removeToken(userId);
 
         assertTrue(removeTokenResponse);
     }
@@ -67,12 +68,12 @@ class RedisAuthTokenCacheTest {
     @Test
     @Order(4)
     void getToken_ForUnsuccessfulFetch() {
-        final RedisConnectionConfigs connectionProperty = new RedisConnectionConfigs("localhost", 6379);
-        final RedisConnectionPoolConfigs connectionPoolConfig = RedisConnectionPoolConfigs.withDefaults();
-        final AuthTokenCache tokenCache = new RedisAuthTokenCache(connectionProperty, connectionPoolConfig);
+        final var connectionProperty = new RedisConnectionConfigs("localhost", 6379);
+        final var connectionPoolConfig = RedisConnectionPoolConfigs.withDefaults();
+        final var tokenCache = new RedisAuthTokenCache(connectionProperty, connectionPoolConfig);
 
-        final String userId = "random-user-id";
-        final Optional<AuthToken> authTokenOptional = tokenCache.getToken(userId);
+        final var userId = "random-user-id";
+        final var authTokenOptional = tokenCache.getToken(userId);
 
         assertFalse(authTokenOptional.isPresent());
     }

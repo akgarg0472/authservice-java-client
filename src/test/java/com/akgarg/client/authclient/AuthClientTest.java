@@ -2,6 +2,7 @@ package com.akgarg.client.authclient;
 
 import com.akgarg.client.authclient.cache.AuthTokenCache;
 import com.akgarg.client.authclient.cache.InMemoryAuthTokenCache;
+import com.akgarg.client.authclient.common.ApiVersion;
 import com.akgarg.client.authclient.common.AuthServiceEndpoint;
 import com.akgarg.client.authclient.common.ValidateTokenRequest;
 import com.akgarg.client.authclient.http.AuthServiceHttpClient;
@@ -23,19 +24,19 @@ class AuthClientTest {
 
     @Test
     void authClientValidateMethod_ShouldReturnFalse_WithInvalidRequestLogs() {
-        final AuthTokenCache authTokenCache = new InMemoryAuthTokenCache();
+        final var authTokenCache = new InMemoryAuthTokenCache();
         final var validateTokenEndpoint = "auth/v1/validate-token";
-        final AuthServiceHttpClient authServiceHttpClient = new DefaultAuthServiceHttpClient(validateTokenEndpoint);
+        final var apiVersion = ApiVersion.V1;
+        final var authServiceHttpClient = new DefaultAuthServiceHttpClient(validateTokenEndpoint, apiVersion);
 
         assertNotNull(authTokenCache, "authTokenCache is null");
         assertNotNull(authServiceHttpClient, "authServiceHttpClient is null");
 
-        final AuthClient authClient = new DefaultAuthClient(
+        final var authClient = new DefaultAuthClient(
                 authTokenCache,
-                authServiceHttpClient
-        );
+                authServiceHttpClient);
 
-        final ValidateTokenRequest validateTokenRequest = new ValidateTokenRequest(
+        final var validateTokenRequest = new ValidateTokenRequest(
                 null,
                 null,
                 Collections.emptyList()
@@ -48,9 +49,10 @@ class AuthClientTest {
 
     @Test
     void authClientValidateMethod_ShouldReturnFalse_WithConnectionExceptionErrorLogs() {
-        final AuthTokenCache authTokenCache = new InMemoryAuthTokenCache();
+        final var authTokenCache = new InMemoryAuthTokenCache();
         final var validateTokenEndpoint = "auth/v1/validate-token";
-        final AuthServiceHttpClient authServiceHttpClient = new DefaultAuthServiceHttpClient(validateTokenEndpoint);
+        final var apiVersion = ApiVersion.V1;
+        final var authServiceHttpClient = new DefaultAuthServiceHttpClient(validateTokenEndpoint, apiVersion);
 
         assertNotNull(authTokenCache, "authTokenCache is null");
         assertNotNull(authServiceHttpClient, "authServiceHttpClient is null");
@@ -62,17 +64,17 @@ class AuthClientTest {
 
     @Test
     void authClientValidateMethod_ShouldReturnFalse_WithFewConnectionExceptionErrorLogs() {
-        final AuthTokenCache authTokenCache = new InMemoryAuthTokenCache();
+        final var authTokenCache = new InMemoryAuthTokenCache();
         final var validateTokenEndpoint = "auth/v1/validate-token";
-        final AuthServiceHttpClient authServiceHttpClient = new DefaultAuthServiceHttpClient(validateTokenEndpoint);
+        final var apiVersion = ApiVersion.V1;
+        final var authServiceHttpClient = new DefaultAuthServiceHttpClient(validateTokenEndpoint, apiVersion);
 
         assertNotNull(authTokenCache, "authTokenCache is null");
         assertNotNull(authServiceHttpClient, "authServiceHttpClient is null");
 
-        final AuthClient authClient = new DefaultAuthClient(
+        final var authClient = new DefaultAuthClient(
                 authTokenCache,
-                authServiceHttpClient
-        );
+                authServiceHttpClient);
 
         final ValidateTokenRequest validateTokenRequest = new ValidateTokenRequest(
                 "36f7cfae7e964cc0aa0cf17d006c3e98", // this userId is mismatched from userId in token
@@ -84,21 +86,22 @@ class AuthClientTest {
                 )
         );
 
-        final boolean validateResponse = authClient.validate(validateTokenRequest);
+        final var validateResponse = authClient.validate(validateTokenRequest);
 
         assertFalse(validateResponse);
     }
 
     @Test
     void authClientValidateMethod_ShouldReturnTrue_WithFewConnectionExceptionErrorLogs() {
-        final AuthTokenCache authTokenCache = new InMemoryAuthTokenCache();
+        final var authTokenCache = new InMemoryAuthTokenCache();
         final var validateTokenEndpoint = "auth/v1/validate-token";
-        final AuthServiceHttpClient authServiceHttpClient = new DefaultAuthServiceHttpClient(validateTokenEndpoint);
+        final var apiVersion = ApiVersion.V1;
+        final var authServiceHttpClient = new DefaultAuthServiceHttpClient(validateTokenEndpoint, apiVersion);
 
         assertNotNull(authTokenCache, "authTokenCache is null");
         assertNotNull(authServiceHttpClient, "authServiceHttpClient is null");
 
-        final boolean validateResponse = isValidateResponse(authTokenCache, authServiceHttpClient);
+        final var validateResponse = isValidateResponse(authTokenCache, authServiceHttpClient);
 
         assertTrue(validateResponse);
     }
@@ -107,12 +110,11 @@ class AuthClientTest {
             final AuthTokenCache authTokenCache,
             final AuthServiceHttpClient authServiceHttpClient
     ) {
-        final AuthClient authClient = new DefaultAuthClient(
+        final var authClient = new DefaultAuthClient(
                 authTokenCache,
-                authServiceHttpClient
-        );
+                authServiceHttpClient);
 
-        final ValidateTokenRequest validateTokenRequest = new ValidateTokenRequest(
+        final var validateTokenRequest = new ValidateTokenRequest(
                 "36f7cfae7e964cc0aa0cf17d006c3e97",
                 getAuthToken(),
                 List.of(

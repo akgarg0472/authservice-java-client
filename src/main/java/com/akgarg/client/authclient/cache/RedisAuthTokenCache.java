@@ -9,7 +9,6 @@ import org.slf4j.LoggerFactory;
 import redis.clients.jedis.Jedis;
 import redis.clients.jedis.JedisPool;
 import redis.clients.jedis.JedisPoolConfig;
-import redis.clients.jedis.Pipeline;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Duration;
@@ -19,12 +18,23 @@ import java.util.Optional;
 import static com.akgarg.client.authclient.cache.AuthTokenSerializerDeserializer.deserialize;
 import static com.akgarg.client.authclient.cache.AuthTokenSerializerDeserializer.serializeToken;
 
+/**
+ * A Redis-backed cache for storing and managing authentication tokens.
+ * This class handles token retrieval, addition, removal, and periodic connection validation.
+ */
 public final class RedisAuthTokenCache implements AuthTokenCache {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(RedisAuthTokenCache.class);
     private static final byte[] REDIS_HASH_FIELD = "auth_token".getBytes(StandardCharsets.UTF_8);
+    private static final Logger log = LoggerFactory.getLogger(RedisAuthTokenCache.class);
+
     private final JedisPool connectionPool;
 
+    /**
+     * Constructs a RedisAuthTokenCache instance with the specified connection configurations.
+     *
+     * @param connectionProperty   Redis connection details
+     * @param connectionPoolConfig Redis connection pool configurations
+     */
     public RedisAuthTokenCache(
             final RedisConnectionConfigs connectionProperty,
             final RedisConnectionPoolConfigs connectionPoolConfig
@@ -33,13 +43,13 @@ public final class RedisAuthTokenCache implements AuthTokenCache {
         this.connectionPool = initializeConnectionPool(connectionProperty, connectionPoolConfig);
         ping();
         registerCleanupShutdownHook();
-        LOGGER.trace("Redis auth token cache initialized");
+        log.info("Redis auth token cache initialized");
     }
 
     @Override
     public Optional<AuthToken> getToken(final String userId) {
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace("Fetching token in cache: '{}'", userId);
+        if (log.isTraceEnabled()) {
+            log.trace("Fetching token in cache: '{}'", userId);
         }
 
         try (final Jedis jedis = connectionPool.getResource()) {
@@ -51,15 +61,15 @@ public final class RedisAuthTokenCache implements AuthTokenCache {
 
             return Optional.of(deserialize(authToken));
         } catch (Exception e) {
-            LOGGER.error("Error getting token for {}: {}", userId, e.getMessage());
+            log.error("Error getting token for {}: {}", userId, e.getMessage());
             return Optional.empty();
         }
     }
 
     @Override
     public boolean addToken(final String userId, final AuthToken token) {
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace("'{}' adding token in cache", userId);
+        if (log.isTraceEnabled()) {
+            log.trace("'{}' adding token in cache", userId);
         }
 
         try (final Jedis jedis = connectionPool.getResource()) {
@@ -67,8 +77,8 @@ public final class RedisAuthTokenCache implements AuthTokenCache {
             final var tokenBytes = serializeToken(token);
             final var expiration = (token.expiration() - System.currentTimeMillis()) / 1000;
 
-            if (LOGGER.isTraceEnabled()) {
-                LOGGER.trace("'{}' expiration time in seconds is: {}", userId, expiration);
+            if (log.isTraceEnabled()) {
+                log.trace("'{}' expiration time in seconds is: {}", userId, expiration);
             }
 
             final var pipeline = jedis.pipelined();
@@ -78,25 +88,32 @@ public final class RedisAuthTokenCache implements AuthTokenCache {
 
             return true;
         } catch (Exception e) {
-            LOGGER.error("error adding token to redis: {}", e.getMessage());
+            log.error("error adding token to redis: {}", e.getMessage());
             return false;
         }
     }
 
     @Override
     public boolean removeToken(final String userId) {
-        if (LOGGER.isTraceEnabled()) {
-            LOGGER.trace("'{}' removing token in cache", userId);
+        if (log.isTraceEnabled()) {
+            log.trace("'{}' removing token in cache", userId);
         }
 
         try (final var jedis = connectionPool.getResource()) {
             return jedis.hdel(userId.getBytes(StandardCharsets.UTF_8), REDIS_HASH_FIELD) == 1;
         } catch (Exception e) {
-            LOGGER.error("'{}' error deleting token: {}", userId, e.getMessage());
+            log.error("'{}' error deleting token: {}", userId, e.getMessage());
             return false;
         }
     }
 
+    /**
+     * Initializes the connection pool with the given Redis connection configurations.
+     *
+     * @param connectionProperty         Redis connection details
+     * @param redisConnectionPoolConfigs Redis connection pool configurations
+     * @return a configured JedisPool instance
+     */
     private JedisPool initializeConnectionPool(
             final RedisConnectionConfigs connectionProperty,
             final RedisConnectionPoolConfigs redisConnectionPoolConfigs
@@ -105,6 +122,12 @@ public final class RedisAuthTokenCache implements AuthTokenCache {
         return new JedisPool(connectionPoolConfigs, connectionProperty.host(), connectionProperty.port());
     }
 
+    /**
+     * Creates and returns a JedisPoolConfig instance based on the provided pool configurations.
+     *
+     * @param redisConnectionPoolConfigs Redis connection pool configurations
+     * @return a JedisPoolConfig instance
+     */
     private JedisPoolConfig getConnectionPoolConfigs(final RedisConnectionPoolConfigs redisConnectionPoolConfigs) {
         final var poolConfig = new JedisPoolConfig();
 
@@ -128,12 +151,14 @@ public final class RedisAuthTokenCache implements AuthTokenCache {
         return poolConfig;
     }
 
-
+    /**
+     * Pings the Redis server to check connectivity.
+     */
     private void ping() {
         try (final var jedis = connectionPool.getResource()) {
             final var pingResponse = jedis.ping();
-            if (LOGGER.isDebugEnabled()) {
-                LOGGER.debug("Redis ping response: {}", pingResponse);
+            if (log.isDebugEnabled()) {
+                log.debug("Redis ping response: {}", pingResponse);
             }
         } catch (Exception e) {
             throw new RedisConnectivityException("PING to redis failed", e);
@@ -144,15 +169,15 @@ public final class RedisAuthTokenCache implements AuthTokenCache {
      * Method to register shutdown hook to close redis connection pool
      */
     private void registerCleanupShutdownHook() {
-        LOGGER.debug("Registering shutdown hook for RedisAuthTokenCache");
+        log.debug("Registering shutdown hook for RedisAuthTokenCache");
 
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             try {
-                LOGGER.info("Shutting down RedisAuthTokenCache...");
+                log.info("Shutting down RedisAuthTokenCache...");
                 connectionPool.close();
-                LOGGER.info("Completed shut down of RedisAuthTokenCache");
+                log.info("Completed shut down of RedisAuthTokenCache");
             } catch (Exception e) {
-                LOGGER.error("Error shutting down RedisAuthTokenCache: {}", e.getMessage());
+                log.error("Error shutting down RedisAuthTokenCache: {}", e.getMessage());
             }
         }, "redisAuthTokenCacheShutdownHook"));
     }

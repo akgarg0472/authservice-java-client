@@ -1,7 +1,7 @@
 # Auth-Service Java Client
 
 ![Java Version](https://img.shields.io/badge/Java-17-blue)
-![version](https://img.shields.io/badge/version-1.1.0-blue)
+![version](https://img.shields.io/badge/version-1.2.0-blue)
 
 ## Table of Contents
 
@@ -39,7 +39,7 @@ AuthClient library can be integrated into Java project using Maven. Add the foll
 <dependency>
     <groupId>com.akgarg</groupId>
     <artifactId>authservice-java-client</artifactId>
-    <version>1.1.0</version>
+    <version>1.2.0</version>
 </dependency>
 ```
 

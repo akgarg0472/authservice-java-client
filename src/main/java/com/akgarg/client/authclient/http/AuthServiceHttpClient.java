@@ -7,20 +7,35 @@ import com.akgarg.client.authclient.common.AuthServiceResponse;
 import java.util.Optional;
 
 /**
- * HTTP client to make API call to auth service to validate auth token. It creates request body and pass to HTTP call to check the validity of auth token.
- * <p>If HTTP call fails due to connectivity or parsing error then it returns empty response but if HTTP call is successful then it returns the appropriate response as per response from auth server</p>
+ * Represents an HTTP client interface for interacting with authentication service.
+ * <p>
+ * This interface defines the contract for making API calls to authentication service
+ * to validate authentication tokens. Implementations handle the creation of request payloads,
+ * communication with the authentication server, and parsing of the response.
+ * </p>
+ * <p>
+ * If the HTTP call encounters an issue, such as a connectivity or parsing error,
+ * an empty {@link Optional} is returned. If the call is successful, the response from
+ * the authentication service is encapsulated in an {@link AuthServiceResponse} object.
+ * </p>
  *
- * @author Akhilesh Garg
+ * @author Akhilesh
  * @since 09/09/23
  */
 public sealed interface AuthServiceHttpClient permits DefaultAuthServiceHttpClient {
 
     /**
-     * Method to query AuthService. It tries to query the auth service at provide endpoint for given request.
+     * Queries the authentication service at the specified endpoint with the provided request payload.
+     * <p>
+     * This method sends the authentication request to the service, processes the response,
+     * and returns it as an {@link Optional}. If the query fails due to connectivity,
+     * server errors, or invalid response formats, an empty {@link Optional} is returned.
+     * </p>
      *
-     * @param endpoint endpoint of auth service API to hit
-     * @param request  request body for auth service API
-     * @return empty optional if query fails due to any issue else return optional with response from auth service
+     * @param endpoint the {@link AuthServiceEndpoint} representing the target API endpoint
+     * @param request  the {@link AuthServiceRequest} containing the payload for token validation
+     * @return an {@link Optional} containing the {@link AuthServiceResponse} if the query is successful,
+     * or an empty {@link Optional} if the query fails
      */
     Optional<AuthServiceResponse> queryAuthService(AuthServiceEndpoint endpoint, AuthServiceRequest request);
 

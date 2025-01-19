@@ -1,5 +1,6 @@
 package com.akgarg.client.authclient;
 
+import com.akgarg.client.authclient.common.ApiVersion;
 import com.akgarg.client.authclient.common.AuthServiceEndpoint;
 import com.akgarg.client.authclient.common.AuthServiceRequest;
 import com.akgarg.client.authclient.common.AuthServiceResponse;
@@ -21,14 +22,15 @@ class AuthServiceHttpClientTest {
 
     @Test
     void queryAuthService_ShouldReturn_EmptyResponse() {
-        final AuthServiceRequest authServiceRequest = new AuthServiceRequest(
+        final var authServiceRequest = new AuthServiceRequest(
                 "36f7cfae7e964cc0aa0cf17d006c3e97",
                 getAuthToken()
         );
 
         final var validateTokenEndpoint = "auth/v1/validate-token";
-        final AuthServiceHttpClient httpClient = new DefaultAuthServiceHttpClient(validateTokenEndpoint);
-        final AuthServiceEndpoint authServiceEndpoint = new AuthServiceEndpoint(
+        final var apiVersion = ApiVersion.V1;
+        final var httpClient = new DefaultAuthServiceHttpClient(validateTokenEndpoint, apiVersion);
+        final var authServiceEndpoint = new AuthServiceEndpoint(
                 "http",
                 "localhost",
                 1234
@@ -38,7 +40,7 @@ class AuthServiceHttpClientTest {
         assertNotNull(authServiceEndpoint, "authServiceEndpoint can't be null");
         assertNotNull(authServiceRequest, "authServiceRequest can't be null");
 
-        final Optional<AuthServiceResponse> authServiceResponse = httpClient.queryAuthService(
+        final var authServiceResponse = httpClient.queryAuthService(
                 authServiceEndpoint,
                 authServiceRequest
         );
@@ -54,14 +56,15 @@ class AuthServiceHttpClientTest {
         );
 
         final var validateTokenEndpoint = "auth/v1/validate-token";
-        final AuthServiceHttpClient httpClient = new DefaultAuthServiceHttpClient(validateTokenEndpoint);
-        final AuthServiceEndpoint authServiceEndpoint = new AuthServiceEndpoint(
+        final var apiVersion = ApiVersion.V1;
+        final var httpClient = new DefaultAuthServiceHttpClient(validateTokenEndpoint, apiVersion);
+        final var authServiceEndpoint = new AuthServiceEndpoint(
                 "http",
                 "localhost",
                 8085
         );
 
-        final AuthServiceResponse expectedResult = new AuthServiceResponse(
+        final var expectedResult = new AuthServiceResponse(
                 authServiceRequest.userId(),
                 authServiceRequest.token(),
                 1694334647L,
@@ -72,7 +75,7 @@ class AuthServiceHttpClientTest {
         assertNotNull(authServiceEndpoint, "authServiceEndpoint can't be null");
         assertNotNull(authServiceRequest, "authServiceRequest can't be null");
 
-        final Optional<AuthServiceResponse> authServiceResponse = httpClient.queryAuthService(
+        final var authServiceResponse = httpClient.queryAuthService(
                 authServiceEndpoint,
                 authServiceRequest
         );
@@ -87,20 +90,21 @@ class AuthServiceHttpClientTest {
 
     @Test
     void queryAuthService_ShouldReturn_FailureResponse() {
-        final AuthServiceRequest authServiceRequest = new AuthServiceRequest(
+        final var authServiceRequest = new AuthServiceRequest(
                 "36f7cfae7e964cc0aa0cf17d006c3e97",
                 getAuthToken()
         );
 
         final var validateTokenEndpoint = "auth/v1/validate-token";
-        final AuthServiceHttpClient httpClient = new DefaultAuthServiceHttpClient(validateTokenEndpoint);
-        final AuthServiceEndpoint authServiceEndpoint = new AuthServiceEndpoint(
+        final var apiVersion = ApiVersion.V1;
+        final var httpClient = new DefaultAuthServiceHttpClient(validateTokenEndpoint, apiVersion);
+        final var authServiceEndpoint = new AuthServiceEndpoint(
                 "http",
                 "localhost",
                 8085
         );
 
-        final AuthServiceResponse expectedResult = new AuthServiceResponse(
+        final var expectedResult = new AuthServiceResponse(
                 authServiceRequest.userId(),
                 authServiceRequest.token(),
                 -1L,
@@ -111,7 +115,7 @@ class AuthServiceHttpClientTest {
         assertNotNull(authServiceEndpoint, "authServiceEndpoint can't be null");
         assertNotNull(authServiceRequest, "authServiceRequest can't be null");
 
-        final Optional<AuthServiceResponse> authServiceResponse = httpClient.queryAuthService(
+        final var authServiceResponse = httpClient.queryAuthService(
                 authServiceEndpoint,
                 authServiceRequest
         );

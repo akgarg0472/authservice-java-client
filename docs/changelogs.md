@@ -18,4 +18,10 @@
 
 - added support for spring boot autoconfiguration
 - added support for spring boot configuration properties
-- added shutdown hook to cleanup redis resources in RedisAuthTokenCache
+- added shutdown hook to clean up redis resources in RedisAuthTokenCache
+
+### v1.2.0
+
+- improved code documentation
+- improved logging
+- bug fixes and minor improvements

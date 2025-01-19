@@ -3,34 +3,70 @@ package com.akgarg.client.authclient.config;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * @author Akhilesh Garg
+ * Configuration properties class for AuthClient.
+ * <p>
+ * This class maps configuration properties prefixed with <strong>"auth.client"</strong> into its fields.
+ * It supports properties related to Redis connection settings and Redis connection pooling configurations.
+ * </p>
+ * <p>
+ * These properties can be configured in the application's configuration files (e.g., <code>application.yml</code> or <code>application.properties</code>).
+ * </p>
+ * <br />
+ * Example configuration:
+ * <pre>
+ * auth.client.redis-host=localhost
+ * auth.client.redis-port=6379
+ * auth.client.redis-connection-pool-max-total=100
+ * auth.client.redis-connection-pool-max-idle=10
+ * auth.client.redis-connection-pool-min-idle=5
+ * </pre>
+ *
+ * @author Akhilesh
  * @since 11/09/23
  */
 @ConfigurationProperties(prefix = "auth.client")
 public class AuthClientProperties {
 
     /**
-     * Defines the host for redis to connect
+     * Redis host for the connection.
+     * <p>
+     * Specifies the hostname or IP address of the Redis server.
+     * </p>
      */
     private String redisHost;
 
     /**
-     * Defines the port for redis to connect
+     * Redis port for the connection.
+     * <p>
+     * Specifies the port number on which the Redis server is running.
+     * </p>
      */
     private int redisPort;
 
     /**
-     * Defines the maximum total connections in redis connection pool
+     * Maximum total connections in the Redis connection pool.
+     * <p>
+     * Specifies the upper limit for the total number of connections maintained in the pool.
+     * Defaults to {@link RedisConnectionPoolConfigs#DEFAULT_MAX_TOTAL}.
+     * </p>
      */
     private int redisConnectionPoolMaxTotal = RedisConnectionPoolConfigs.DEFAULT_MAX_TOTAL;
 
     /**
-     * Defines the maximum idle connections in redis connection pool
+     * Maximum idle connections in the Redis connection pool.
+     * <p>
+     * Specifies the maximum number of idle connections allowed in the pool.
+     * Defaults to {@link RedisConnectionPoolConfigs#DEFAULT_MAX_IDLE}.
+     * </p>
      */
     private int redisConnectionPoolMaxIdle = RedisConnectionPoolConfigs.DEFAULT_MAX_IDLE;
 
     /**
-     * Defines the minimum idle connections in redis connection pool
+     * Minimum idle connections in the Redis connection pool.
+     * <p>
+     * Specifies the minimum number of idle connections to maintain in the pool.
+     * Defaults to {@link RedisConnectionPoolConfigs#DEFAULT_MIN_IDLE}.
+     * </p>
      */
     private int redisConnectionPoolMinIdle = RedisConnectionPoolConfigs.DEFAULT_MIN_IDLE;
 
@@ -74,12 +110,24 @@ public class AuthClientProperties {
         this.redisConnectionPoolMinIdle = redisConnectionPoolMinIdle;
     }
 
+    /**
+     * Validates whether the Redis connection properties are properly set.
+     *
+     * @return <code>true</code> if the Redis host is not null or blank, and the Redis port is greater than 0;
+     * <code>false</code> otherwise.
+     */
     public boolean validateRedisConnectionProperties() {
         return this.redisHost != null &&
                 !this.redisHost.isBlank() &&
                 this.redisPort > 0;
     }
 
+    /**
+     * Validates the Redis connection pool configuration.
+     *
+     * @return <code>true</code> if all connection pool settings are greater than 0;
+     * <code>false</code> otherwise.
+     */
     public boolean validateRedisConnectionPoolConfig() {
         return this.redisConnectionPoolMaxTotal > 0 &&
                 this.redisConnectionPoolMaxIdle > 0 &&
