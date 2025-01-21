@@ -15,7 +15,6 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
-import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -51,7 +50,6 @@ public final class DefaultAuthServiceHttpClient implements AuthServiceHttpClient
     private final String validateTokenEndpoint;
     private final ObjectMapper objectMapper;
     private final HttpClient httpClient;
-    private final ApiVersion apiVersion;
 
     /**
      * Constructs a {@code DefaultAuthServiceHttpClient} instance with the specified parameters.
@@ -61,8 +59,7 @@ public final class DefaultAuthServiceHttpClient implements AuthServiceHttpClient
      * @throws NullPointerException if {@code apiVersion} is {@code null}
      */
     public DefaultAuthServiceHttpClient(final String validateTokenEndpoint, final ApiVersion apiVersion) {
-        this.validateTokenEndpoint = getValidateTokenEndpoint(validateTokenEndpoint);
-        this.apiVersion = Objects.requireNonNull(apiVersion);
+        this.validateTokenEndpoint = getValidateTokenEndpoint(apiVersion, validateTokenEndpoint);
         this.objectMapper = createObjectMapperInstance();
         this.httpClient = HttpClient.newHttpClient();
     }
@@ -71,12 +68,12 @@ public final class DefaultAuthServiceHttpClient implements AuthServiceHttpClient
      * Resolves the validate token endpoint. If a custom endpoint is not provided,
      * the default endpoint is constructed using the specified API version.
      *
+     * @param apiVersion            the API version to use in the endpoint
      * @param validateTokenEndpoint custom endpoint value
      * @return resolved endpoint string
      */
-    private String getValidateTokenEndpoint(final String validateTokenEndpoint) {
+    private String getValidateTokenEndpoint(final ApiVersion apiVersion, final String validateTokenEndpoint) {
         if (validateTokenEndpoint == null || validateTokenEndpoint.isBlank()) {
-            assert apiVersion != null;
             return VALIDATE_TOKEN_ENDPOINT.formatted(apiVersion.getVersion());
         } else {
             return validateTokenEndpoint;

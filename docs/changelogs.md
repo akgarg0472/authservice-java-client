@@ -25,3 +25,7 @@
 - improved code documentation
 - improved logging
 - bug fixes and minor improvements
+
+### v1.2.1
+
+- fixed api version null bug in `DefaultAuthServiceHttpClient`.
